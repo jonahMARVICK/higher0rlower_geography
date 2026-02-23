@@ -1,5 +1,3 @@
-const readline = require("readline-sync");
-
 // ASCII Art
 const vs = `
  _    __    
@@ -21,7 +19,6 @@ const logo = `
 /_____/\\____/|__/|__/\\___/_/      
 `;
 
-// Countries Data
 const countries = [
   { country: "Canada", region: "North America", extention: 9984670, population: 41575585 },
   { country: "Vatican City State", region: "Southern Europe", extention: 0.49, population: 882 },
@@ -38,26 +35,13 @@ const countries = [
   { country: "Indonesia", region: "Southeast Asia", extention: 1904569, population: 284438782 }
 ];
 
-// Helper Functions
-function converter(user, op1, op2) {
-  if (user === "a") return op1;
-  if (user === "b") return op2;
-}
+const content = document.getElementById("Content");
+const runButton = document.getElementById("run-button");
 
-function checker(userChoice, correctChoice, score) {
-  if (userChoice === correctChoice) {
-    score++;
-    console.log(`You Got it! | Current score ${score}`);
-    return { game: true, score };
-  } else {
-    console.log(`Sorry that's not right! | Final score ${score}`);
-    return { game: false, score };
-  }
-}
-
-function getHigher(first, second) {
-  return first.extention > second.extention ? first : second;
-}
+let sample1;
+let sample2;
+let score;
+let game;
 
 function getRandomCountry(exclude = null) {
   let random;
@@ -67,32 +51,55 @@ function getRandomCountry(exclude = null) {
   return random;
 }
 
-// Game Logic
-let sample1 = getRandomCountry();
-let sample2 = getRandomCountry(sample1);
-let score = 0;
-let game = true;
+function getHigher(first, second) {
+  return first.extention > second.extention ? first : second;
+}
 
-while (game) {
-  console.clear();
-  console.log(logo);
+function renderRound() {
+  content.innerHTML = `
+${logo}
 
-  const guessInput = readline
-    .question(
-      `Compare A: ${sample1.country}, a country in ${sample1.region} | population: ${sample1.population.toLocaleString()}
+Compare A: ${sample1.country}, a country in ${sample1.region}
+Population: ${sample1.population.toLocaleString()}
+
 ${vs}
-With B: ${sample2.country}, a country in ${sample2.region} | population: ${sample2.population.toLocaleString()}
-Type 'A' or 'B': `
-    )
-    .toLowerCase();
 
-  const guess = converter(guessInput, sample1, sample2);
+With B: ${sample2.country}, a country in ${sample2.region}
+Population: ${sample2.population.toLocaleString()}
+
+Choose:
+<button onclick="handleGuess('a')">A</button>
+<button onclick="handleGuess('b')">B</button>
+`;
+}
+
+function handleGuess(choice) {
+  if (!game) return;
+
+  const guess = choice === "a" ? sample1 : sample2;
   const higher = getHigher(sample1, sample2);
 
-  const result = checker(guess, higher, score);
-  game = result.game;
-  score = result.score;
+  if (guess === higher) {
+    score++;
+    content.innerHTML += `\n\nYou got it! Current score: ${score}\n`;
+    
+    sample1 = sample2;
+    sample2 = getRandomCountry(sample1);
 
-  sample1 = sample2;
-  sample2 = getRandomCountry(sample1);
+    setTimeout(renderRound, 1500);
+  } else {
+    game = false;
+    content.innerHTML += `\n\nGame Over! Final score: ${score}\n`;
+    content.innerHTML += `<br><br><button onclick="startGame()">Play Again</button>`;
+  }
 }
+
+function startGame() {
+  score = 0;
+  game = true;
+  sample1 = getRandomCountry();
+  sample2 = getRandomCountry(sample1);
+  renderRound();
+}
+
+runButton.addEventListener("click", startGame);
